@@ -1,0 +1,39 @@
+{{#apiInfo}}
+{{#apis}}
+{{#operations}}
+{{#operation}}
+{{#-first}}
+import {{classname}}Controller from './{{classname}}Controller';
+{{/-first}}
+{{/operation}}
+{{/operations}}
+{{/apis}}
+{{/apiInfo}}
+
+export interface Controllers {
+{{#apiInfo}}
+{{#apis}}
+{{#operations}}
+{{#operation}}
+    {{#-first}}
+    {{classname}}Controller: any;
+    {{/-first}}
+{{/operation}}
+{{/operations}}
+{{/apis}}
+{{/apiInfo}}
+};
+
+export default {
+{{#apiInfo}}
+{{#apis}}
+{{#operations}}
+{{#operation}}
+    {{#-first}}
+    {{classname}}Controller,
+    {{/-first}}
+{{/operation}}
+{{/operations}}
+{{/apis}}
+{{/apiInfo}}
+};

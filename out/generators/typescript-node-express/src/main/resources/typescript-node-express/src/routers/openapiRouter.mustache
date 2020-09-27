@@ -1,0 +1,93 @@
+import { Request, Response, NextFunction } from 'express';
+import { HttpError, OpenApiRequest, OpenApiRequestMetadata, OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
+import controllers, { Controllers } from '../controllers';
+import logger from '../logger';
+
+const handleError = (err: HttpError, req: Request, res: Response, next: NextFunction) => {
+    logger.error(`Router: Controller error: ${err}`);
+    next(err);
+}
+
+interface OpenAPIV3OperationObject extends OpenAPIV3.OperationObject {
+    [index:string]: any;
+}
+
+/**
+ * The purpose of this route is to collect the request variables as defined in the
+ * OpenAPI document and pass them to the handling controller as another Express
+ * middleware. All parameters are collected in the requet.swagger.values key-value object
+ *
+ * The assumption is that security handlers have already verified and allowed access
+ * to this path. If the business-logic of a particular path is dependant on authentication
+ * parameters (e.g. scope checking) - it is recommended to define the authentication header
+ * as one of the parameters expected in the OpenAPI/Swagger document.
+ *
+ *  Requests made to paths that are not in the OpernAPI scope
+ *  are passed on to the next middleware handler.
+ * @returns {Function}
+ */
+function openApiRouter() {
+    return async (req: OpenApiRequest, res: Response, next: NextFunction) => {
+        try {
+            /**
+             * This middleware runs after a previous process have applied an openapi object
+             * to the request.
+             * If none was applied this is because the path requested is not in the schema.
+             * If there's no openapi object, we have nothing to do, and pass on to next middleware.
+             */
+            if (
+                req.openapi === undefined ||
+                (req.openapi as OpenApiRequestMetadata).schema === undefined
+            ) {
+                next();
+                return;
+            }
+    
+            const { schema }: { schema: OpenAPIV3OperationObject } = (req.openapi as OpenApiRequestMetadata);
+            const { operationId } = schema;
+            const controllerName = schema[ 'x-openapi-router-controller' ];
+            const baseController: any = controllers[ controllerName as keyof Controllers ];
+
+            if (!baseController || baseController === undefined) {
+                const err: HttpError = {
+                    status: 500,
+                    message: `Request sent to controller '${controllerName}' which has not been defined`,
+                    name: 'ControllerError',
+                    errors: [
+                        {
+                            path: req.path,
+                            message: `Request sent to controller '${controllerName}' which has not been defined`,
+                            error_code: '500',
+                        },
+                    ],
+                };
+                logger.error(err);
+                handleError(err, req, res, next);
+            }
+            else {
+                const controller = baseController[ operationId ];
+                await controller(req, res, next);
+            }
+        }
+        catch (error) {
+            const err: HttpError = {
+                status: 500,
+                message: error.message,
+                name: 'ControllerError',
+                errors: [
+                    {
+                        path: req.path,
+                        message: error.message,
+                        error_code: '500',
+                    },
+                ],
+            };
+            logger.error(err);
+            handleError(err, req, res, next);
+        }
+    };
+}
+
+export default openApiRouter;
+
+

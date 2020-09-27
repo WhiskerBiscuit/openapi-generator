@@ -1,0 +1,52 @@
+import ExpressServer from './ExpressServer';
+import logger from './logger';
+
+// Define application configuration interface
+interface AppConfig {
+    HOST: string,
+    OPENAPI_YAML: string,
+    PORT: number,
+}
+
+class App {
+    config: AppConfig;
+    expressServer: ExpressServer;
+
+    constructor(config: AppConfig) {
+        this.config = config;
+    }
+
+    // Start server
+    async launch() {
+        try {
+            // Create new server instance
+            this.expressServer = new ExpressServer(this.config.PORT, this.config.OPENAPI_YAML);
+
+            // Start the server
+            await this.expressServer.launch();
+
+            // Log startup result
+            logger.info('App: Express server running');
+        } catch (error) {
+            // Log startup error
+            logger.error(error);
+
+            // Perform shutdown procedures
+            await this.close();
+        }
+    }
+
+    // Perform shutdown procedures
+    async close() {
+        // Assuming we have a server instance
+        if (this.expressServer !== undefined) {
+            // Perform shutdown procedures
+            await this.expressServer.close();
+
+            // Log shutdown result
+            logger.info(`App: Server shut down on port ${this.config.PORT}`);
+        }
+    }
+}
+
+export default App;

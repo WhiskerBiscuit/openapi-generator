@@ -1,0 +1,15 @@
+import path from 'path';
+
+const config: any = {
+    ROOT_DIR: __dirname,
+    PORT: {{#serverPort}}{{serverPort}}{{/serverPort}}{{^serverPort}}3000{{/serverPort}},
+    HOST: '{{#serverHost}}{{serverHost}}{{/serverHost}}{{^serverHost}}http://localhost{{/serverHost}}',
+    BASE_VERSION: '{{#contextPath}}{{contextPath}}{{/contextPath}}{{^contextPath}}v2{{/contextPath}}',
+    CONTROLLER_DIRECTORY: path.join(__dirname, 'controllers'),
+    PROJECT_DIR: __dirname,
+};
+config.OPENAPI_YAML = path.join(config.ROOT_DIR, 'api', 'openapi.yaml');
+config.FULL_PATH = `${config.HOST}:${config.PORT}/${config.BASE_VERSION}`;
+config.FILE_UPLOAD_PATH = path.join(config.PROJECT_DIR, 'uploaded_files');
+
+export default config;

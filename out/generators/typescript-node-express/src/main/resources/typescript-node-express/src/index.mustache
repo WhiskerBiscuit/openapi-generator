@@ -1,0 +1,29 @@
+import config from './config';
+import logger from './logger';
+import App from './App';
+
+// Create server application launcher
+const launchServer = async () => {
+    // TODO: load remote / local config
+
+    // Create config-based application
+    const app = new App(config);
+
+    // Try to start the server
+    try {
+        // Start server
+        app.launch();
+
+        // Log result
+        logger.info('Main: Express server running');
+    } catch (error) {
+        // Log error
+        logger.error('Main: Express Server failure', error.message);
+
+        // Perform any shutdown procedures
+        await app.close();
+    }
+};
+
+// Start server logging any errors
+launchServer().catch(e => logger.error(e));

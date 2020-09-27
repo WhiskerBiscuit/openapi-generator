@@ -1,0 +1,49 @@
+import Service from './Service';
+
+{{#operations}}
+{{#operation}}
+/**
+{{#summary}}
+ * @description - {{{summary}}}
+{{/summary}}
+{{#notes}}
+ * {{{notes}}}
+{{/notes}}
+ *
+{{#allParams}}
+ * @property { {{{dataType}}} } {{^required}}[ {{/required}}{{paramName}}{{^required}} ]{{/required}}{{#description}} - {{{description}}}{{/description}}
+{{/allParams}}
+{{^returnType}}
+ * @returns {Promise<any>}
+{{/returnType}}
+{{#returnType}}
+ * @returns { Promise<{{{returnType}}}> }
+{{/returnType}}
+ */
+const {{{operationId}}} = ({{#allParams}}{{#-first}}{ {{/-first}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{#-last}} }: any{{/-last}}{{/allParams}}) => (new Promise(
+    (resolve, reject) => {
+        try {
+            resolve(Service.successResponse({
+            {{#allParams}}
+                {{paramName}},
+            {{/allParams}}
+            }));
+        }
+        catch (e) {
+            reject(Service.rejectResponse(
+                e.message || 'Invalid input',
+                e.status || 405,
+            ));
+        }
+    },
+));
+
+{{/operation}}
+{{/operations}}
+export default {
+    {{#operations}}
+    {{#operation}}
+    {{operationId}},
+    {{/operation}}
+    {{/operations}}
+};
